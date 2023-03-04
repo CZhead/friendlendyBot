@@ -7,7 +7,7 @@ from playsound import playsound
 from langdetect import detect
 from boto3 import Session #if using Polly
 from contextlib import closing
-
+from colorama import Fore, Style
 
 import pyaudio
 import wave
@@ -200,6 +200,8 @@ if __name__ == '__main__':
     r = recorder("data/input.wav")
     p = player("data/input.wav")
     l = listener(r, p)
-    print('hold ctrl to record, press p to playback, press q to quit')
+    print(Fore.RED + 'Welcome to friendlyBot, designed by CZhead.eth, under public license, free of use and modification')
+    print('hold ctrl to record, press s to stop the bot talking, press q to quit')
+    print(Style.RESET_ALL)
     l.start() #keyboard listener is a thread so we start it here
     l.join() #wait for the tread to terminate so the program doesn't instantly clos
