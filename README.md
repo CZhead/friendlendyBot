@@ -1,4 +1,4 @@
-# FriendlendyBot 
+# FriendlyBot 
 ## Description
 This is a conversational BOT for educational purpose.\
 It can recognize which language is spoken and answer accordingly.\
