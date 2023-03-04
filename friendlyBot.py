@@ -5,13 +5,16 @@ from gtts import gTTS
 from gtts.tokenizer.pre_processors import abbreviations, end_of_line
 from playsound import playsound
 from langdetect import detect
+from boto3 import Session #if using Polly
+from contextlib import closing
+
 
 import pyaudio
 import wave
 import openai
 import time
 import os
-
+import keyboard as kb
 
 class player:
     def __init__(self, wavfile):
@@ -60,6 +63,11 @@ class recorder:
         self.pa = pyaudio.PyAudio()
         openai.api_key =  open('APIKEY/openaikey','r').read()
 
+        # If using Polly only
+        # Create a client using the credentials and region defined in the [adminuser]
+        # section of the AWS credentials file (~/.aws/credentials).
+        self.polly = Session(profile_name="default").client("polly")
+
     def start(self):
         #we call start and stop from the keyboard listener, so we use the asynchronous 
         # version of pyaudio streaming. The keyboard listener must regain control to 
@@ -89,7 +97,6 @@ class recorder:
             self.stream.stop_stream()
             self.stream.close()
             self.wf.close()
-            
             self.recording = False
             print('recording finished')
 
@@ -108,11 +115,43 @@ class recorder:
         )["choices"][0]["message"]["content"]
         print(self.answer)
 
-    def toSpeech(self):
-        
+    def toGoogleSpeech(self):
         file="data/output.mp3"
-        tts = gTTS( self.answer, lang = self.language, slow=False, pre_processor_funcs = [abbreviations, end_of_line]) 
+        tts = gTTS(self.answer, lang = self.language, slow=False, pre_processor_funcs = [abbreviations, end_of_line]) 
         tts.save(file)
+        Thread(target=self.playMP3(file)).start()    
+
+    def toPollySpeech(self):
+        file="data/output.mp3"
+        VoiceId = None
+
+        if (self.language == 'fr'): VoiceId="Lea"
+        if (self.language == 'en'): VoiceId="Amy"
+        if (self.language == 'de'): VoiceId="Hannah"
+        if (self.language == 'zh-cn'): VoiceId="Zhiyu"
+        if (VoiceId is None): VoiceId="Amy"
+
+        try:
+            response = self.polly.synthesize_speech(Text=self.answer, OutputFormat="mp3", VoiceId=VoiceId, Engine="neural")
+        except (BotoCoreError, ClientError) as error:
+            print(error)
+            sys.exit(-1)
+
+        if "AudioStream" in response:
+                with closing(response["AudioStream"]) as stream:
+                   try:
+                    # Open a file for writing the output as a binary stream
+                        with open(file, "wb") as file1:
+                           file1.write(stream.read())
+                   except IOError as error:
+                      # Could not write to file, exit gracefully
+                      print(error)
+                      sys.exit(-1)
+
+        else:
+            print("Could not stream audio")
+            sys.exit(-1)
+
         Thread(target=self.playMP3(file)).start()    
 
     def playMP3(self, file):
@@ -120,7 +159,7 @@ class recorder:
         mixer.music.load(file)
         target=mixer.music.play()
         while mixer.music.get_busy(): # check if the file is playing
-            continue
+            if kb.is_pressed("s"): break
         mixer.music.unload()
 
 
@@ -152,7 +191,8 @@ class listener(keyboard.Listener):
                 self.recorder.stop()
                 self.recorder.toText()
                 self.recorder.sendToGPT()
-                self.recorder.toSpeech()
+                #self.recorder.toGoogleSpeech()
+                self.recorder.toPollySpeech()
         elif isinstance(key, keyboard.KeyCode): #alphanumeric key event
             pass
 
