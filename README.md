@@ -14,7 +14,7 @@ You can alternativelw use Google TextToSpeech to convert the answer from text to
 ### Clone this repository: 
 git clone https://github.com/CZhead/friendlendyBot.git\
 ### Install python dependencies:
-pip install pynput, pygame, gtts, playsound, langdetect, pyaudio, wave, openai, boto3
+pip install pynput pygame gtts playsound langdetect pyaudio wave openai boto3 keyboard
 ### Create an API key 
 Go to https://platform.openai.com/account/api-keys and create a key\
 Create a file openaikey in APIKEY folder

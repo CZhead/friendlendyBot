@@ -1,3 +1,12 @@
+
+import pyaudio
+import wave
+import openai
+import time
+import os
+import keyboard as kb
+import colorama
+
 from threading import Thread, Lock
 from pynput import keyboard
 from pygame import mixer
@@ -7,14 +16,9 @@ from playsound import playsound
 from langdetect import detect
 from boto3 import Session #if using Polly
 from contextlib import closing
+from colorama import init
+init()
 from colorama import Fore, Style
-
-import pyaudio
-import wave
-import openai
-import time
-import os
-import keyboard as kb
 
 class player:
     def __init__(self, wavfile):
