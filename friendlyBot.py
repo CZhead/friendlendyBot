@@ -64,7 +64,7 @@ class recorder:
         openai.api_key =  open('APIKEY/openaikey','r').read()
 
         # ChatGPT init
-        self.MODEL_ENGINE = "text-davinci-003"
+        self.MODEL_ENGINE = "text-davinci-003" #"text-curie-001" #
         self.USERNAME = "Christophe"
         self.AI_NAME = "Rose"
         self.INITIAL_PROMPT = self.AI_NAME + ': I am a friendly artificial intelligence.'
@@ -112,8 +112,6 @@ class recorder:
         if not self.recording:         
             file = open(self.filename, "rb")
             self.prompt = openai.Audio.transcribe("whisper-1", file)["text"]
-            self.language=detect(self.prompt)
-            print(self.language + " detected")
             print(self.prompt)
 
     def sendToGPT(self):
@@ -159,12 +157,16 @@ class recorder:
 
 
     def toGoogleSpeech(self):
+        self.language=detect(self.answer)
+        print(self.language + " detected")
         file="data/output.mp3"
         tts = gTTS(self.answer, lang = self.language, slow=False, pre_processor_funcs = [abbreviations, end_of_line]) 
         tts.save(file)
         Thread(target=self.playMP3(file)).start()    
 
     def toPollySpeech(self):
+        self.language=detect(self.answer)
+        print(self.language + " detected")
         file="data/output.mp3"
         VoiceId = None
 
