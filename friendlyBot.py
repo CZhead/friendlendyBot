@@ -63,6 +63,14 @@ class recorder:
         self.pa = pyaudio.PyAudio()
         openai.api_key =  open('APIKEY/openaikey','r').read()
 
+        # ChatGPT init
+        self.MODEL_ENGINE = "text-davinci-003"
+        self.USERNAME = "Christophe"
+        self.AI_NAME = "Rose"
+        self.INITIAL_PROMPT = self.AI_NAME + ': I am a friendly artificial intelligence.'
+        self.conversation_history = self.INITIAL_PROMPT + "\n"
+        
+
         # If using Polly only
         # Create a client using the credentials and region defined in the [adminuser]
         # section of the AWS credentials file (~/.aws/credentials).
@@ -114,6 +122,41 @@ class recorder:
             messages=[{"role": "user", "content": self.prompt}]
         )["choices"][0]["message"]["content"]
         print(self.answer)
+
+    def sendToGPT2(self):
+        def get_response(prompt):
+            """Returns the response for the given prompt using the OpenAI API."""
+            completions = openai.Completion.create(
+                     engine = self.MODEL_ENGINE,
+                     prompt = prompt,
+                 max_tokens = 1024,
+                temperature = 0.7,
+            )
+            return completions.choices[0].text
+
+        def handle_input(
+                       input_str : str,
+            conversation_history : str,
+                        USERNAME : str,
+                         AI_NAME : str,
+                         ):
+            """Updates the conversation history and generates a response using GPT-3."""
+            # Update the conversation history
+            conversation_history += f"{USERNAME}: {input_str}\n"
+
+            # Generate a response using GPT-3
+            message = get_response(conversation_history)
+            self.answer = message[len(AI_NAME) + 2:]
+            print(self.answer)
+
+            # Update the conversation history
+            # conversation_history += f"{AI_NAME}: {message}\n"
+            conversation_history += f"{message}\n"
+
+            return conversation_history
+
+        self.conversation_history = handle_input(self.prompt, self.conversation_history, self.USERNAME, self.AI_NAME)      
+
 
     def toGoogleSpeech(self):
         file="data/output.mp3"
@@ -190,7 +233,7 @@ class listener(keyboard.Listener):
             if key.ctrl:
                 self.recorder.stop()
                 self.recorder.toText()
-                self.recorder.sendToGPT()
+                self.recorder.sendToGPT2()
                 #self.recorder.toGoogleSpeech()
                 self.recorder.toPollySpeech()
         elif isinstance(key, keyboard.KeyCode): #alphanumeric key event
